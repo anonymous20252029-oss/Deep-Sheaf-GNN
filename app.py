@@ -205,6 +205,7 @@ tab_diag, tab_xray, tab_theory = st.tabs([
 # --- TAB 1: POSTERIOR DISTRIBUTION ---
 with tab_diag:
     col_chart, col_interpret = st.columns([3, 2])
+
     with col_chart:
         fig, ax = plt.subplots(figsize=(7, 3.8), dpi=150)
         classes = [f"Class {i}" for i in range(len(probs))]
@@ -224,7 +225,7 @@ with tab_diag:
         st.pyplot(fig)
         plt.close()
 
-   with col_interpret:
+    with col_interpret:
         st.subheader("💡 Mathematical Insight & Behavior")
         
         if local_homophily < 0.3 and is_correct:
@@ -238,7 +239,6 @@ with tab_diag:
                 such that discordant channels are attenuated toward zero, isolating critical boundary signals.
             </div>
             """, unsafe_allow_html=True)
-            
             st.info(r"$\mathbf{w}_{uv} \in (0, 1)^d \to \mathbf{0}$ along divergent feature channels.")
             
         elif degree >= 8:
@@ -250,7 +250,6 @@ with tab_diag:
                 Our <b>Initial Residual Transport</b> branch anchors latent diffusion to the original semantic input vector, ensuring non-vanishing gradient highways and preserving class boundaries at depth $K = 8$.
             </div>
             """, unsafe_allow_html=True)
-            
             st.info(r"$\mathbf{h}_u^{(l+1)} = \mathrm{ELU}\left(\mathrm{BN}\left((1-\alpha)\mathbf{z}_u^{(l)} + \alpha \mathbf{h}_u^{(0)}\right)\right)$ with $\alpha = 0.20$.")
             
         else:
@@ -262,7 +261,6 @@ with tab_diag:
                 The predicted class confidence significantly dominates competing hypotheses while maintaining localized topological consistency.
             </div>
             """, unsafe_allow_html=True)
-            
             st.info(r"Stable representation with strictly positive Normalized Dirichlet Energy $\mathcal{E}(\mathbf{X}) \approx 10^0$.")
 
 # --- TAB 2: NEIGHBORHOOD X-RAY ---
