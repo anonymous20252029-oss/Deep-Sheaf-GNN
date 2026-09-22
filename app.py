@@ -17,39 +17,60 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Academic Dark/Slate UI styling
+# Custom Academic UI styling (Light & Dark theme compatible)
 st.markdown("""
 <style>
     .metric-card {
-        background: linear-gradient(135deg, #1e293b, #0f172a);
-        border: 1px solid #334155;
-        border-radius: 10px;
-        padding: 16px;
-        color: white;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border-radius: 12px;
+        padding: 18px;
+    }
+    @media (prefers-color-scheme: dark) {
+        .metric-card {
+            background: #1e293b;
+            border-color: #334155;
+            box-shadow: none;
+        }
     }
     .badge-correct {
-        background-color: #065f46;
-        color: #34d399;
+        background-color: #dcfce7;
+        color: #15803d;
         padding: 4px 10px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
+        border-radius: 9999px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        border: 1px solid #bbf7d0;
     }
     .badge-wrong {
-        background-color: #881337;
-        color: #fb7185;
+        background-color: #fee2e2;
+        color: #b91c1c;
         padding: 4px 10px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
+        border-radius: 9999px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        border: 1px solid #fecaca;
     }
-    .insight-box {
-        background-color: #1e1b4b;
-        border-left: 4px solid #6366f1;
-        padding: 14px;
-        border-radius: 4px;
-        font-size: 0.92rem;
-        line-height: 1.5;
+    .insight-card {
+        background: #f8fafc;
+        border-left: 5px solid #4f46e5;
+        border-top: 1px solid #e2e8f0;
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 16px;
+        color: #0f172a;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+    @media (prefers-color-scheme: dark) {
+        .insight-card {
+            background: #0f172a;
+            border-color: #334155;
+            border-left-color: #6366f1;
+            color: #f1f5f9;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -167,7 +188,7 @@ with col_m3:
 with col_m4:
     homo_color = "#ef4444" if local_homophily < 0.3 else ("#f59e0b" if local_homophily < 0.7 else "#10b981")
     st.markdown('<div class="metric-card">'
-                f'<span style="color:#94a3b8; font-size:0.85rem;">LOCAL HOMOPHILY ($h_{{local}}$)</span><br>'
+                '<span style="color:#94a3b8; font-size:0.85rem; font-weight:600;">LOCAL HOMOPHILY (<i>h</i><sub>local</sub>)</span><br>'
                 f'<h2 style="color:{homo_color}; margin:8px 0;">{local_homophily*100:.1f}%</h2>'
                 f'<span style="color:#94a3b8; font-size:0.8rem;">{same_class_count}/{degree} identical class</span>'
                 '</div>', unsafe_allow_html=True)
@@ -203,33 +224,46 @@ with tab_diag:
         st.pyplot(fig)
         plt.close()
 
-    with col_interpret:
+   with col_interpret:
         st.subheader("💡 Mathematical Insight & Behavior")
+        
         if local_homophily < 0.3 and is_correct:
-            st.markdown("""
-            <div class="insight-box">
-            <b>Heterophilic Boundary Preservation:</b><br>
-            This node resides in an <i>extreme heterophilic region</i> where the majority of immediate neighbors belong to divergent semantic classes. 
-            Under standard isotropic message passing (GCN), degree-normalized averaging forces feature vectors toward class consensus, causing severe misclassification. 
-            In contrast, <b>Cellular Sheaf-GNN</b> parameterizes channel-wise restriction maps $\mathbf{w}_{uv} \in (0, 1)^d$ that drive conflicting dimension weights toward zero, effectively filtering out destructive neighbor interference.
+            st.markdown(r"""
+            <div class="insight-card">
+                <b style="color: #4f46e5; font-size: 1.05rem;">Heterophilic Boundary Preservation:</b><br><br>
+                This node resides in an <b>extreme heterophilic region</b> where the vast majority of direct neighbors belong to conflicting classes.
+                <br><br>
+                Under standard isotropic message passing (GCN), spatial degree-averaging blends discordant signals, inducing classification error.
+                In contrast, <b>Cellular Sheaf-GNN</b> modulates edge-wise restriction maps 
+                such that discordant channels are attenuated toward zero, isolating critical boundary signals.
             </div>
             """, unsafe_allow_html=True)
+            
+            st.info(r"$\mathbf{w}_{uv} \in (0, 1)^d \to \mathbf{0}$ along divergent feature channels.")
+            
         elif degree >= 8:
-            st.markdown("""
-            <div class="insight-box">
-            <b>Over-Smoothing Resistance at Dense Hubs:</b><br>
-            Nodes with high graph degree ($>8$ incident edges) suffer accelerated Dirichlet energy collapse under deep propagation horizons ($K=8$). 
-            Our <b>Initial Residual Transport</b> mechanism ($\\alpha \cdot \mathbf{h}^{(0)}$ with $\\alpha=0.20$) anchors the node representation to its original input features, ensuring non-vanishing gradient flow and preventing feature homogenization.
+            st.markdown(r"""
+            <div class="insight-card">
+                <b style="color: #4f46e5; font-size: 1.05rem;">Over-Smoothing Resistance at Dense Hubs:</b><br><br>
+                Nodes with high graph connectivity (degree $\ge 8$) typically experience rapid representation collapse under multi-hop propagation.
+                <br><br>
+                Our <b>Initial Residual Transport</b> branch anchors latent diffusion to the original semantic input vector, ensuring non-vanishing gradient highways and preserving class boundaries at depth $K = 8$.
             </div>
             """, unsafe_allow_html=True)
+            
+            st.info(r"$\mathbf{h}_u^{(l+1)} = \mathrm{ELU}\left(\mathrm{BN}\left((1-\alpha)\mathbf{z}_u^{(l)} + \alpha \mathbf{h}_u^{(0)}\right)\right)$ with $\alpha = 0.20$.")
+            
         else:
-            st.markdown("""
-            <div class="insight-box">
-            <b>Multi-Hop Diffusion Equilibrium:</b><br>
-            Propagating across 8 continuous discrete diffusion layers retains sharp class separability without representation collapse. 
-            The posterior confidence substantially outpaces competing hypotheses while respecting local boundary constraints.
+            st.markdown(r"""
+            <div class="insight-card">
+                <b style="color: #4f46e5; font-size: 1.05rem;">Multi-Hop Diffusion Equilibrium:</b><br><br>
+                Propagating across $8$ discrete cellular diffusion layers preserves sharp class separability without representation degradation.
+                <br><br>
+                The predicted class confidence significantly dominates competing hypotheses while maintaining localized topological consistency.
             </div>
             """, unsafe_allow_html=True)
+            
+            st.info(r"Stable representation with strictly positive Normalized Dirichlet Energy $\mathcal{E}(\mathbf{X}) \approx 10^0$.")
 
 # --- TAB 2: NEIGHBORHOOD X-RAY ---
 with tab_xray:
